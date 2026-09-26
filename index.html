@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ClubConnect</title>
+<style>
+  :root{
+    --bg:#f0f2f5; --text:#050505; --muted:#65676b; --accent:#1877f2; --accent2:#e41e3f;
+    --card:#ffffff; --border:#dddfe2; --pill:#e7f0ff; --heart:#f02849;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#18191a; --text:#e4e6eb; --muted:#b0b3b8; --accent:#2d88ff; --accent2:#f7455d;
+      --card:#242526; --border:#3a3b3c; --pill:#1c2a3d; --heart:#f7455d;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#18191a; --text:#e4e6eb; --muted:#b0b3b8; --accent:#2d88ff; --accent2:#f7455d;
+    --card:#242526; --border:#3a3b3c; --pill:#1c2a3d; --heart:#f7455d;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    background:var(--bg); color:var(--text); margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  header{
+    position:sticky; top:0; padding-top:env(safe-area-inset-top,0px);
+    background:var(--card); border-bottom:1px solid var(--border); z-index:10;
+  }
+  .hwrap{max-width:640px; margin:0 auto; padding:.7rem 1rem; display:flex; align-items:center; justify-content:space-between;}
+  .logo{font-size:1.35rem; font-weight:800; color:var(--accent); letter-spacing:-.5px;}
+  .logo span{color:var(--accent2);}
+  .hicons{display:flex; gap:.5rem;}
+  .hicon{width:38px; height:38px; border-radius:50%; background:var(--pill); display:flex; align-items:center; justify-content:center; font-size:1.1rem;}
+  .wrap{max-width:640px; margin:0 auto; padding:.8rem 0 5.5rem;}
+
+  .stories{display:flex; gap:.6rem; overflow-x:auto; padding:.7rem 1rem; -webkit-overflow-scrolling:touch;}
+  .story{flex:0 0 auto; width:64px; text-align:center;}
+  .story-avatar{width:58px; height:58px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:1.1rem; border:3px solid var(--accent); margin:0 auto .3rem;}
+  .story-name{font-size:.7rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:10px; margin:0 1rem .8rem; overflow:hidden;}
+  .card-pad{padding:1rem 1.1rem;}
+
+  .post-top{display:flex; align-items:center; gap:.6rem; padding:.8rem 1rem .3rem;}
+  .avatar{width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:1rem; flex-shrink:0;}
+  .post-name{font-weight:700; font-size:.95rem; line-height:1.2;}
+  .post-meta{font-size:.78rem; color:var(--muted);}
+  .cat-pill{display:inline-block; background:var(--pill); color:var(--accent); font-size:.7rem; padding:.1rem .5rem; border-radius:99px; margin-left:.3rem;}
+  .post-text{padding:.4rem 1rem .8rem; font-size:.95rem; line-height:1.4;}
+  .post-stats{padding:.2rem 1rem; font-size:.8rem; color:var(--muted); display:flex; justify-content:space-between; border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
+  .actions{display:flex;}
+  .action-btn{flex:1; border:none; background:none; padding:.6rem 0; font-size:.88rem; font-weight:600; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.35rem;}
+  .action-btn.liked{color:var(--heart);}
+  .action-btn:active{background:var(--pill);}
+
+  label{display:block; font-size:.85rem; color:var(--muted); margin:.7rem 0 .25rem;}
+  input,select,textarea{width:100%; padding:.6rem .7rem; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text); font-size:.95rem; font-family:inherit;}
+  textarea{resize:vertical; min-height:70px;}
+  .row{display:flex; gap:.6rem;} .row > *{flex:1;}
+  button.primary{margin-top:1rem; background:var(--accent); color:#fff; border:none; padding:.7rem 1.1rem; border-radius:8px; font-size:.95rem; cursor:pointer; font-weight:700; width:100%;}
+  button.approve{background:var(--accent); color:#fff; border:none; padding:.45rem .9rem; border-radius:7px; font-size:.85rem; cursor:pointer; margin-right:.4rem; font-weight:600;}
+  button.reject{background:none; color:var(--accent2); border:1px solid var(--accent2); padding:.45rem .9rem; border-radius:7px; font-size:.85rem; cursor:pointer; font-weight:600;}
+  .muted{color:var(--muted); font-size:.85rem;}
+  .empty{text-align:center; color:var(--muted); padding:2.5rem 1rem;}
+  .section-title{font-weight:700; font-size:1rem; padding:1rem 1rem .3rem;}
+  .composer-top{display:flex; align-items:center; gap:.6rem; padding:.9rem 1.1rem .5rem;}
+
+  /* REELS */
+  #tab-reels{ padding:0; }
+  .reels-scroller{
+    height:calc(100dvh - 118px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+    overflow-y:scroll; scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch;
+  }
+  .reel{
+    height:100%; scroll-snap-align:start; scroll-snap-stop:always; position:relative;
+    display:flex; align-items:flex-end; color:#fff; overflow:hidden;
+  }
+  .reel-bg{position:absolute; inset:0; opacity:.92;}
+  .reel-content{position:relative; z-index:1; width:100%; padding:1.1rem 4.2rem 1.5rem 1.1rem;}
+  .reel-club{display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem;}
+  .reel-avatar{width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.25); border:2px solid #fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.85rem;}
+  .reel-name{font-weight:700; font-size:.95rem; text-shadow:0 1px 3px rgba(0,0,0,.4);}
+  .reel-caption{font-size:.92rem; text-shadow:0 1px 3px rgba(0,0,0,.4); line-height:1.4;}
+  .reel-side{position:absolute; right:.8rem; bottom:1.5rem; z-index:1; display:flex; flex-direction:column; align-items:center; gap:1.1rem;}
+  .reel-action{display:flex; flex-direction:column; align-items:center; gap:.2rem; background:none; border:none; color:#fff; cursor:pointer;}
+  .reel-action .ic{font-size:1.7rem; filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));}
+  .reel-action .ct{font-size:.72rem; font-weight:600; text-shadow:0 1px 3px rgba(0,0,0,.4);}
+  .reel-hint{position:absolute; top:.9rem; left:50%; transform:translateX(-50%); z-index:1; font-size:.7rem; background:rgba(0,0,0,.35); padding:.25rem .7rem; border-radius:99px;}
+
+  .bottomnav{position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--border); display:flex; padding-bottom:env(safe-area-inset-bottom,0px); z-index:10;}
+  .navbtn{flex:1; border:none; background:none; padding:.65rem 0 .5rem; display:flex; flex-direction:column; align-items:center; gap:.15rem; color:var(--muted); font-size:.65rem; cursor:pointer;}
+  .navbtn .ic{font-size:1.3rem; line-height:1;}
+  .navbtn.active{color:var(--accent);}
+
+  .toast{position:fixed; bottom:calc(4.6rem + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%); background:#050505e6; color:#fff; padding:.6rem 1.1rem; border-radius:20px; font-size:.85rem; opacity:0; transition:opacity .25s; pointer-events:none; z-index:30;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hwrap">
+    <div class="logo">Club<span>Connect</span></div>
+    <div class="hicons">
+      <div class="hicon">🔍</div>
+      <div class="hicon">🔔</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap" id="main-wrap">
+
+  <!-- HOME / FEED -->
+  <div id="tab-home">
+    <div class="stories" id="stories"></div>
+    <div class="card" id="post-as-card" style="display:none;">
+      <div class="composer-top">
+        <div class="avatar" id="post-as-avatar">?</div>
+        <select id="post-as" style="border:none; background:var(--bg); font-weight:600;"></select>
+      </div>
+      <div class="card-pad" style="padding-top:0;">
+        <textarea id="post-text" placeholder="Share an update, result, or event..."></textarea>
+        <button class="primary" type="button" id="post-btn">Post</button>
+      </div>
+    </div>
+    <div id="feed-list"></div>
+  </div>
+
+  <!-- REELS -->
+  <div id="tab-reels" style="display:none;">
+    <div class="reels-scroller" id="reels-scroller"></div>
+  </div>
+
+  <!-- APPLY -->
+  <div id="tab-apply" style="display:none;">
+    <div class="card card-pad">
+      <p class="muted" style="margin-top:0;">Applying as a school or ECD. Submissions go to the foundation's approval queue — once approved, your club gets its own page and can start posting.</p>
+      <form id="apply-form">
+        <label>Club / school name</label>
+        <input required id="f-name" placeholder="e.g. Thabo ECD Reading Circle">
+        <div class="row">
+          <div><label>Type</label><select id="f-type"><option>School</option><option>ECD</option></select></div>
+          <div><label>Club category</label><select id="f-category"><option>Reading</option><option>Cricket</option><option>Both</option></select></div>
+        </div>
+        <label>Location</label>
+        <input required id="f-location" placeholder="e.g. Mamelodi, Gauteng">
+        <label>Contact person & number</label>
+        <input required id="f-contact" placeholder="e.g. Nomsa Dlamini — 082 000 0000">
+        <label>Tell us a bit about your club</label>
+        <textarea id="f-bio" placeholder="How many kids, how often you meet, what you'd like to share..."></textarea>
+        <button class="primary" type="submit">Submit application</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="tab-admin" style="display:none;">
+    <div class="section-title">Pending applications</div>
+    <div id="pending-list"></div>
+    <div class="section-title">Approved clubs</div>
+    <div id="approved-list"></div>
+  </div>
+
+</div>
+
+<div class="bottomnav">
+  <button class="navbtn active" data-tab="home"><span class="ic">🏠</span>Home</button>
+  <button class="navbtn" data-tab="reels"><span class="ic">🎬</span>Reels</button>
+  <button class="navbtn" data-tab="apply"><span class="ic">➕</span>Apply</button>
+  <button class="navbtn" data-tab="admin"><span class="ic">🛠️</span>Admin</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var STORE_KEY = 'club_platform_prototype_v3';
+  var COLORS = ['#1877f2','#42b883','#f7931e','#9b59b6','#e74c3c','#16a085','#e67e22'];
+  var GRADIENTS = [
+    'linear-gradient(160deg,#1877f2,#0b3d91)',
+    'linear-gradient(160deg,#42b883,#1c6b4a)',
+    'linear-gradient(160deg,#f7931e,#a85400)',
+    'linear-gradient(160deg,#9b59b6,#4a235a)',
+    'linear-gradient(160deg,#e74c3c,#7b1a12)',
+    'linear-gradient(160deg,#16a085,#0b4a3f)',
+    'linear-gradient(160deg,#e67e22,#8a4a0a)'
+  ];
+
+  var state = load();
+
+  function colorFor(id){ return COLORS[id % COLORS.length]; }
+  function gradientFor(id){ return GRADIENTS[id % GRADIENTS.length]; }
+  function initials(name){ return name.split(' ').filter(Boolean).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase(); }
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return {
+      nextId: 4,
+      applications: [
+        {id:1, name:'Thabo ECD Reading Circle', type:'ECD', category:'Reading', location:'Mamelodi, Gauteng', contact:'Nomsa Dlamini — 082 000 0000', bio:'12 toddlers, meet twice a week.', status:'pending'},
+        {id:2, name:'Vukuzenzele Primary Cricket Club', type:'School', category:'Cricket', location:'Soweto, Gauteng', contact:'Sipho Nkosi — 083 111 2222', bio:'U13 team, practices Tuesdays and Thursdays.', status:'approved'},
+        {id:3, name:'Little Readers Sunnyside', type:'ECD', category:'Reading', location:'Sunnyside, Pretoria', contact:'Ayesha Khan — 084 333 4444', bio:'Storytime club for 3-5 year olds.', status:'approved'}
+      ],
+      posts: [
+        {id:1, clubId:2, text:'Great turnout at practice today — 18 kids working on batting technique! 🏏', ts:'2d', likes:14, liked:false, comments:3},
+        {id:2, clubId:3, text:'Finished our first picture book of the term. The kids loved it! 📖', ts:'1d', likes:9, liked:false, comments:1}
+      ],
+      reels: [
+        {id:1, clubId:2, caption:'Six! 🏏 Best hit of the term from our youngest player.', likes:41, liked:false, comments:6},
+        {id:2, clubId:3, caption:'Storytime voices on 📖✨ — guess which animal this is!', likes:27, liked:false, comments:4},
+        {id:3, clubId:2, caption:'Fielding drills before the big weekend match 💪', likes:18, liked:false, comments:2}
+      ]
+    };
+  }
+
+  function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+
+  function toast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 1500);
+  }
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  var tabs = ['home','reels','apply','admin'];
+  document.querySelectorAll('.navbtn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      tabs.forEach(function(t){
+        document.getElementById('tab-'+t).style.display = (t===btn.dataset.tab) ? '' : 'none';
+      });
+      document.querySelectorAll('.navbtn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      if(btn.dataset.tab === 'admin') renderAdmin();
+      if(btn.dataset.tab === 'home') renderHome();
+      if(btn.dataset.tab === 'reels') renderReels();
+    });
+  });
+
+  document.getElementById('apply-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    var app = {
+      id: state.nextId++,
+      name: document.getElementById('f-name').value.trim(),
+      type: document.getElementById('f-type').value,
+      category: document.getElementById('f-category').value,
+      location: document.getElementById('f-location').value.trim(),
+      contact: document.getElementById('f-contact').value.trim(),
+      bio: document.getElementById('f-bio').value.trim(),
+      status: 'pending'
+    };
+    state.applications.push(app);
+    save();
+    e.target.reset();
+    toast('Application submitted 🎉 — sent to the admin queue.');
+  });
+
+  function renderAdmin(){
+    var pendingEl = document.getElementById('pending-list');
+    var approvedEl = document.getElementById('approved-list');
+    var pending = state.applications.filter(function(a){ return a.status === 'pending'; });
+    var approved = state.applications.filter(function(a){ return a.status === 'approved'; });
+
+    pendingEl.innerHTML = pending.length ? '' : '<div class="empty">No pending applications right now.</div>';
+    pending.forEach(function(a){
+      var div = document.createElement('div');
+      div.className = 'card card-pad';
+      div.innerHTML =
+        '<div style="display:flex; gap:.7rem; align-items:flex-start;">' +
+          '<div class="avatar" style="background:'+colorFor(a.id)+'">'+esc(initials(a.name))+'</div>' +
+          '<div style="flex:1;">' +
+            '<div class="post-name">'+esc(a.name)+' <span class="cat-pill">'+esc(a.category)+'</span></div>' +
+            '<div class="post-meta">'+esc(a.type)+' · '+esc(a.location)+'</div>' +
+            '<div class="post-meta">'+esc(a.contact)+'</div>' +
+            (a.bio ? '<div style="margin-top:.4rem; font-size:.9rem;">'+esc(a.bio)+'</div>' : '') +
+            '<div style="margin-top:.7rem;">' +
+              '<button class="approve" data-id="'+a.id+'" data-action="approve">Approve</button>' +
+              '<button class="reject" data-id="'+a.id+'" data-action="reject">Reject</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      pendingEl.appendChild(div);
+    });
+
+    approvedEl.innerHTML = approved.length ? '' : '<div class="empty">No approved clubs yet.</div>';
+    approved.forEach(function(a){
+      var div = document.createElement('div');
+      div.className = 'card card-pad';
+      div.style.display = 'flex'; div.style.alignItems = 'center'; div.style.gap = '.7rem';
+      div.innerHTML =
+        '<div class="avatar" style="background:'+colorFor(a.id)+'">'+esc(initials(a.name))+'</div>' +
+        '<div><div class="post-name">'+esc(a.name)+'</div><div class="post-meta">'+esc(a.location)+' · '+esc(a.category)+'</div></div>';
+      approvedEl.appendChild(div);
+    });
+
+    pendingEl.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = Number(btn.dataset.id);
+        var app = state.applications.find(function(a){ return a.id === id; });
+        app.status = (btn.dataset.action === 'approve') ? 'approved' : 'rejected';
+        save();
+        renderAdmin();
+        toast(app.status === 'approved' ? 'Approved ✅ — club is now live.' : 'Application rejected.');
+      });
+    });
+  }
+
+  function renderHome(){
+    var approved = state.applications.filter(function(a){ return a.status === 'approved'; });
+
+    var storiesEl = document.getElementById('stories');
+    storiesEl.innerHTML = approved.map(function(a){
+      return '<div class="story"><div class="story-avatar" style="background:'+colorFor(a.id)+'">'+esc(initials(a.name))+'</div>' +
+        '<div class="story-name">'+esc(a.name.split(' ')[0])+'</div></div>';
+    }).join('');
+
+    var postAsCard = document.getElementById('post-as-card');
+    var postAsSelect = document.getElementById('post-as');
+    if(approved.length){
+      postAsCard.style.display = '';
+      postAsSelect.innerHTML = approved.map(function(a){ return '<option value="'+a.id+'">'+esc(a.name)+'</option>'; }).join('');
+      updateComposerAvatar();
+    } else {
+      postAsCard.style.display = 'none';
+    }
+
+    var feedEl = document.getElementById('feed-list');
+    var posts = state.posts.slice().reverse();
+    feedEl.innerHTML = posts.length ? '' : '<div class="empty">No posts yet — approve a club and share the first update.</div>';
+    posts.forEach(function(p){
+      var club = state.applications.find(function(a){ return a.id === p.clubId; });
+      var div = document.createElement('div');
+      div.className = 'card';
+      div.innerHTML =
+        '<div class="post-top">' +
+          '<div class="avatar" style="background:'+colorFor(p.clubId)+'">'+esc(initials(club ? club.name : '?'))+'</div>' +
+          '<div><div class="post-name">'+esc(club ? club.name : 'Unknown club')+(club?'<span class="cat-pill">'+esc(club.category)+'</span>':'')+'</div>' +
+          '<div class="post-meta">'+esc(p.ts||'just now')+'</div></div>' +
+        '</div>' +
+        '<div class="post-text">'+esc(p.text)+'</div>' +
+        '<div class="post-stats"><span>'+(p.liked?'❤️ ':'')+(p.likes>0?p.likes+' likes':'')+'</span><span>'+(p.comments>0?p.comments+' comments':'')+'</span></div>' +
+        '<div class="actions">' +
+          '<button class="action-btn '+(p.liked?'liked':'')+'" data-id="'+p.id+'" data-action="like">'+(p.liked?'❤️':'🤍')+' Like</button>' +
+          '<button class="action-btn" data-action="comment">💬 Comment</button>' +
+          '<button class="action-btn" data-action="share">↗️ Share</button>' +
+        '</div>';
+      feedEl.appendChild(div);
+    });
+
+    feedEl.querySelectorAll('[data-action="like"]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = Number(btn.dataset.id);
+        var p = state.posts.find(function(x){ return x.id === id; });
+        p.liked = !p.liked; p.likes += p.liked ? 1 : -1;
+        save(); renderHome();
+      });
+    });
+    feedEl.querySelectorAll('[data-action="comment"], [data-action="share"]').forEach(function(btn){
+      btn.addEventListener('click', function(){ toast('Prototype only — not wired up yet 🙂'); });
+    });
+  }
+
+  function updateComposerAvatar(){
+    var sel = document.getElementById('post-as');
+    var av = document.getElementById('post-as-avatar');
+    function refresh(){
+      var id = Number(sel.value);
+      var club = state.applications.find(function(a){ return a.id === id; });
+      if(club){ av.style.background = colorFor(id); av.textContent = initials(club.name); }
+    }
+    sel.addEventListener('change', refresh);
+    refresh();
+  }
+
+  document.getElementById('post-btn').addEventListener('click', function(){
+    var clubId = Number(document.getElementById('post-as').value);
+    var text = document.getElementById('post-text').value.trim();
+    if(!text) return;
+    state.posts.push({id: Date.now(), clubId: clubId, text: text, ts: 'just now', likes:0, liked:false, comments:0});
+    save(); document.getElementById('post-text').value = ''; renderHome(); toast('Posted 🎉');
+  });
+
+  // ---- reels ----
+  function renderReels(){
+    var scroller = document.getElementById('reels-scroller');
+    var approved = state.applications.filter(function(a){ return a.status === 'approved'; });
+    scroller.innerHTML = state.reels.length ? '' : '<div class="empty" style="color:#fff;">No reels yet.</div>';
+    state.reels.forEach(function(r, idx){
+      var club = state.applications.find(function(a){ return a.id === r.clubId; });
+      var div = document.createElement('div');
+      div.className = 'reel';
+      div.innerHTML =
+        '<div class="reel-bg" style="background:'+gradientFor(r.clubId)+'"></div>' +
+        (idx===0 ? '<div class="reel-hint">Swipe up for more ⬆️</div>' : '') +
+        '<div class="reel-side">' +
+          '<button class="reel-action" data-id="'+r.id+'" data-action="like"><span class="ic">'+(r.liked?'❤️':'🤍')+'</span><span class="ct">'+r.likes+'</span></button>' +
+          '<button class="reel-action" data-action="comment"><span class="ic">💬</span><span class="ct">'+r.comments+'</span></button>' +
+          '<button class="reel-action" data-action="share"><span class="ic">↗️</span><span class="ct">Share</span></button>' +
+        '</div>' +
+        '<div class="reel-content">' +
+          '<div class="reel-club">' +
+            '<div class="reel-avatar">'+esc(initials(club ? club.name : '?'))+'</div>' +
+            '<div class="reel-name">'+esc(club ? club.name : 'Unknown club')+'</div>' +
+          '</div>' +
+          '<div class="reel-caption">'+esc(r.caption)+'</div>' +
+        '</div>';
+      scroller.appendChild(div);
+    });
+
+    scroller.querySelectorAll('[data-action="like"]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = Number(btn.dataset.id);
+        var r = state.reels.find(function(x){ return x.id === id; });
+        r.liked = !r.liked; r.likes += r.liked ? 1 : -1;
+        save(); renderReels();
+      });
+    });
+    scroller.querySelectorAll('[data-action="comment"], [data-action="share"]').forEach(function(btn){
+      btn.addEventListener('click', function(){ toast('Prototype only — not wired up yet 🙂'); });
+    });
+  }
+
+  renderHome();
+})();
+</script>
+
+</body>
+</html>
